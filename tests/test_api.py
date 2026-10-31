@@ -179,6 +179,44 @@ def test_openapi_documents_error_contract(client):
     artifact = spec["paths"]["/v1/artifacts/{request_id}/{name}"]["get"]["responses"]
     assert artifact["404"]["content"]["application/json"]["schema"] == ref
     assert {"image/png", "image/jpeg"} <= set(artifact["200"]["content"])
+    for path, op in (("/v1/perceive", "post"), ("/v1/artifacts/{request_id}/{name}", "get")):
+        for status, resp in spec["paths"][path][op]["responses"].items():
+            if status == "200":
+                continue
+            media = resp["content"]["application/json"]
+            bodies = [media["example"]] if "example" in media else [e["value"] for e in media["examples"].values()]
+            assert all(STATUS[b["error"]["code"]] == int(status) for b in bodies), (path, status)
+
+
+def _with_test_image(body):
+    return {**body, "image": {"b64": jpeg_b64()}}
+
+
+def test_documented_examples_are_accepted(client):
+    """Every request example an agent can copy (/v1/tasks and OpenAPI) must pass validation and run."""
+    spec = client.get("/openapi.json").json()
+    tasks = client.get("/v1/tasks").json()["tasks"]
+    for entry in tasks:
+        path = "/v1/matting_box" if entry["task"] == "matting_box" else "/v1/perceive"
+        r = client.post(path, json=_with_test_image(entry["request_example"]))
+        assert r.status_code == 200, (entry["task"], r.text)
+    for path in ("/v1/perceive", "/v1/matting_box"):
+        examples = spec["paths"][path]["post"]["requestBody"]["content"]["application/json"]["examples"]
+        for name, ex in examples.items():
+            r = client.post(path, json=_with_test_image(ex["value"]))
+            assert r.status_code == 200, (path, name, r.text)
+
+
+def test_openapi_describes_every_operation_and_request_field(client):
+    spec = client.get("/openapi.json").json()
+    for path, ops in spec["paths"].items():
+        for method, op in ops.items():
+            assert op.get("summary") and op.get("description"), (method, path)
+    schemas = spec["components"]["schemas"]
+    for model in ("PerceiveRequest", "MattingBoxRequest", "ImageInput", "Options", "RenderStyle"):
+        for field, prop in schemas[model]["properties"].items():
+            assert prop.get("description") or "$ref" in prop, (model, field)
+    assert schemas["PerceiveRequest"]["properties"]["task"]["enum"]
 
 
 def test_health_loading_while_factory_blocks(settings):
