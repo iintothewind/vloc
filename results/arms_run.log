@@ -1,0 +1,12 @@
+done arms/2B_bf16.jsonl
+done arms/4B_bf16.jsonl
+done arms/4B_Q4KM_native.jsonl
+0.03.310.201 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 8192, kv_unified = 'false'
+2044512, 4750 MiB
+done arms/4B_Q4KM_card.jsonl
+0.01.089.345 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 8192, kv_unified = 'false'
+2080066, 4929 MiB
+{"arm": "arms/2B_bf16.jsonl", "n_img": 60, "F1@0.5": 76.1, "F1_mean": 55.6, "tp_fp_fn@0.5": [256, 62, 99], "rejection_rate": 100.0, "det_p50_s": 1.094, "det_p95_s": 2.441, "ref_p50_s": 0.25, "det_no_parse": 0}
+{"arm": "arms/4B_bf16.jsonl", "n_img": 60, "F1@0.5": 76.6, "F1_mean": 57.9, "tp_fp_fn@0.5": [253, 53, 102], "rejection_rate": 100.0, "det_p50_s": 1.961, "det_p95_s": 4.315, "ref_p50_s": 0.467, "det_no_parse": 0}
+{"arm": "arms/4B_Q4KM_native.jsonl", "n_img": 60, "F1@0.5": 74.2, "F1_mean": 52.6, "tp_fp_fn@0.5": [241, 54, 114], "rejection_rate": 96.7, "det_p50_s": 0.691, "det_p95_s": 1.353, "ref_p50_s": 0.261, "det_no_parse": 0}
+{"arm": "arms/4B_Q4KM_card.jsonl", "n_img": 60, "F1@0.5": 79.7, "F1_mean": 62.2, "tp_fp_fn@0.5": [277, 63, 78], "rejection_rate": 96.7, "det_p50_s": 1.162, "det_p95_s": 2.101, "ref_p50_s": 0.664, "det_no_parse": 0}

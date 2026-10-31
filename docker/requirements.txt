@@ -1,0 +1,7 @@
+transformers==5.12.1
+accelerate==1.14.0
+huggingface-hub==1.21.0
+qwen_vl_utils==0.0.14
+safetensors==0.8.0
+numpy==2.2.6
+Pillow==12.2.0

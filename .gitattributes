@@ -1,0 +1,14 @@
+* text=auto eol=lf
+
+# Must stay LF: executed inside Linux containers / on the GPU host
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.yml text eol=lf
+
+*.py text diff=python
+*.md text diff=markdown
+*.jsonl text -diff linguist-generated
+
+*.tgz binary
+*.jpg binary
+*.png binary

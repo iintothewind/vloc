@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Model weights and runtimes live on the GPU host only (see AGENTS.md)
+models/
+checkpoints/
+gguf/
+llama.cpp/
+WeVisOne-VL/
+*.safetensors
+*.gguf
+*.pt
+*.bin
+
+# Eval data and run outputs (regenerated on spark2)
+coco/
+arms/
+*.log
+!results/*.log
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
