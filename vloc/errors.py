@@ -8,9 +8,11 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from vloc.schemas import ErrorCode
+
 log = logging.getLogger("vloc")
 
-STATUS = {
+STATUS: dict[ErrorCode, int] = {
     "invalid_request": 422,
     "image_too_large": 413,
     "unsupported_image": 415,
@@ -24,7 +26,7 @@ STATUS = {
 
 
 class ApiError(Exception):
-    def __init__(self, code: str, message: str, details: dict[str, Any] | None = None):
+    def __init__(self, code: ErrorCode, message: str, details: dict[str, Any] | None = None):
         super().__init__(message)
         self.code = code
         self.status = STATUS[code]

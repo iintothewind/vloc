@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -102,3 +102,38 @@ class PerceiveResponse(BaseModel):
     raw_response: str
     renders: list[Artifact]
     latency_ms: dict[str, int]
+
+
+ErrorCode = Literal[
+    "invalid_request",
+    "image_too_large",
+    "unsupported_image",
+    "image_fetch_failed",
+    "not_found",
+    "not_ready",
+    "busy",
+    "timeout",
+    "internal",
+]
+
+
+class ErrorDetail(BaseModel):
+    code: ErrorCode
+    message: str
+    details: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Extra context; for invalid_request from schema validation, `errors` holds the pydantic error list.",
+    )
+
+
+class ErrorResponse(BaseModel):
+    error: ErrorDetail
+
+
+class HealthResponse(BaseModel):
+    status: Literal["ready", "loading", "failed"]
+    model: str | None = None
+    min_pixels: int | None = None
+    max_pixels: int | None = None
+    version: str | None = None
+    error: str | None = Field(None, description="Load failure message; only when status is failed.")

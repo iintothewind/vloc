@@ -163,6 +163,24 @@ def test_sync_timeout(make_client):
             block.set()
 
 
+def test_openapi_documents_error_contract(client):
+    from vloc.errors import STATUS
+
+    spec = client.get("/openapi.json").json()
+    ref = {"$ref": "#/components/schemas/ErrorResponse"}
+    perceive = spec["paths"]["/v1/perceive"]["post"]["responses"]
+    expected = {str(s) for s in STATUS.values()} - {"404"}
+    assert expected <= set(perceive)
+    for status in expected:
+        assert perceive[status]["content"]["application/json"]["schema"] == ref
+    assert "Retry-After" in perceive["503"]["headers"]
+    assert "HTTPValidationError" not in spec["components"]["schemas"]
+    assert set(spec["components"]["schemas"]["ErrorDetail"]["properties"]["code"]["enum"]) == set(STATUS)
+    artifact = spec["paths"]["/v1/artifacts/{request_id}/{name}"]["get"]["responses"]
+    assert artifact["404"]["content"]["application/json"]["schema"] == ref
+    assert {"image/png", "image/jpeg"} <= set(artifact["200"]["content"])
+
+
 def test_health_loading_while_factory_blocks(settings):
     from tests.conftest import running_client
 
