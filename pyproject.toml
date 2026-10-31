@@ -20,3 +20,6 @@ test = ["pytest==9.2.0"]
 
 [tool.setuptools]
 packages = ["vloc"]
+
+[tool.setuptools.package-data]
+vloc = ["skill.md"]

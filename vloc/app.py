@@ -8,7 +8,7 @@ from pathlib import Path as FsPath
 from typing import Annotated, Any, Callable
 
 from fastapi import Body, FastAPI, Path, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from PIL import Image
 
 from vloc import __version__, docs
@@ -67,6 +67,7 @@ def create_app(settings: Settings, engine_factory: Callable[[], Engine]) -> Fast
         summary="Detection, grounding, counting, OCR, segmentation and matting on one image, synchronously.",
         description=docs.api_description(settings),
         openapi_tags=docs.OPENAPI_TAGS,
+        servers=[{"url": settings.public_base_url}] if settings.public_base_url else None,
         lifespan=lifespan,
     )
     install_handlers(app)
@@ -82,6 +83,21 @@ def create_app(settings: Settings, engine_factory: Callable[[], Engine]) -> Fast
         """Always 200 while the process serves HTTP, even if the model is still loading or failed.
         Use for container liveness only; check `GET /v1/health` before sending work."""
         return {"status": "alive"}
+
+    @app.get(
+        "/skill.md",
+        tags=["meta"],
+        operation_id="getSkill",
+        summary="Agent skill: compact usage guide in Markdown",
+        response_class=PlainTextResponse,
+        responses={200: {"content": {"text/markdown": {"schema": {"type": "string"}}}}},
+    )
+    async def skill(request: Request) -> PlainTextResponse:
+        """Markdown skill for coding agents: when to use each task, code to send a local image, how to read
+        results, recipes and known model quirks. The base URL is `VLOC_PUBLIC_BASE_URL` if set, else the URL
+        this request reached. Save it as an agent skill (e.g. `skills/vloc/SKILL.md`)."""
+        base = settings.public_base_url or str(request.base_url)
+        return PlainTextResponse(docs.skill_markdown(settings, base), media_type="text/markdown; charset=utf-8")
 
     @app.get(
         "/v1/health",

@@ -188,6 +188,18 @@ def test_openapi_documents_error_contract(client):
             assert all(STATUS[b["error"]["code"]] == int(status) for b in bodies), (path, status)
 
 
+def test_skill_md_rendered_for_this_server(make_client):
+    with make_client() as c:
+        r = c.get("/skill.md")
+        assert r.status_code == 200 and r.headers["content-type"].startswith("text/markdown")
+        assert "{{" not in r.text and r.text.startswith("---\nname: vloc\n")
+        assert 'BASE = "http://testserver"' in r.text
+    with make_client(public_base_url="https://vloc.example", allow_url_fetch=False) as c:
+        text = c.get("/skill.md").text
+        assert 'BASE = "https://vloc.example"' in text and "`image.url` is disabled" in text
+        assert c.get("/openapi.json").json()["servers"] == [{"url": "https://vloc.example"}]
+
+
 def _with_test_image(body):
     return {**body, "image": {"b64": jpeg_b64()}}
 

@@ -1,7 +1,9 @@
-"""OpenAPI text, task guide and examples. Everything here is served via /openapi.json, /docs and /v1/tasks."""
+"""OpenAPI text, task guide, examples and the agent skill. Served via /openapi.json, /docs, /v1/tasks, /skill.md."""
 
 from __future__ import annotations
 
+import functools
+from importlib.resources import files
 from typing import Any
 
 from fastapi.openapi.models import Example
@@ -12,6 +14,28 @@ from vloc.config import Settings
 from vloc.schemas import ErrorResponse
 
 EXAMPLE_URL = "https://example.com/image.jpg"
+
+
+@functools.cache
+def _skill_template() -> str:
+    return files("vloc").joinpath("skill.md").read_text(encoding="utf-8")
+
+
+def skill_markdown(s: Settings, base_url: str) -> str:
+    """Agent skill with this deployment's base URL and limits filled in."""
+    values = {
+        "BASE_URL": base_url.rstrip("/"),
+        "ARTIFACT_TTL_H": f"{s.artifact_ttl_s / 3600:g}",
+        "MAX_PIXELS": f"{s.max_pixels:,}",
+        "MAX_IMAGE_BYTES": f"{s.max_image_bytes:,}",
+        "MAX_IMAGE_PIXELS": f"{s.max_image_pixels:,}",
+        "URL_FETCH_NOTE": "" if s.allow_url_fetch else " `image.url` is disabled on this server; always send `b64`.",
+    }
+    text = _skill_template()
+    for key, value in values.items():
+        text = text.replace("{{" + key + "}}", value)
+    return text
+
 
 # task -> (description, output, example query or reference_boxes)
 TASK_GUIDE: dict[str, tuple[str, str, Any]] = {
@@ -302,6 +326,9 @@ def api_description(s: Settings) -> str:
 Synchronous visual perception over HTTP: object detection, referring expressions, pointing, counting, OCR,
 segmentation, alpha matting, search-by-example and free-form visual Q&A on a single image, powered by the
 `{s.model_path.rstrip('/').split('/')[-1]}` vision-language model on one GPU.
+
+**Agents:** `GET /skill.md` returns a compact usage skill (when to use which task, code to send a local file,
+recipes, model quirks) with this server's URL filled in.
 
 ## How to call it
 
